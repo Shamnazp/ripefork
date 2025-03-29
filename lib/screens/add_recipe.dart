@@ -1,5 +1,6 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:ripefo/models/recipe_model.dart';
 import 'package:ripefo/screens/home.dart';
@@ -9,6 +10,10 @@ import 'package:ripefo/screens/search_recipe.dart';
 import 'package:ripefo/services/hive_service.dart';
 
 class AddRecipeScreen extends StatefulWidget {
+  final AddRecipeModel? recipe; // Optional parameter for editing
+
+  AddRecipeScreen({this.recipe});
+
   @override
   _AddRecipeScreenState createState() => _AddRecipeScreenState();
 }
@@ -16,10 +21,28 @@ class AddRecipeScreen extends StatefulWidget {
 class _AddRecipeScreenState extends State<AddRecipeScreen> {
   final TextEditingController nameController = TextEditingController();
   final TextEditingController sourceController = TextEditingController();
-  final List<TextEditingController> _ingredientControllers = [
-TextEditingController()];
+  final List<TextEditingController> _ingredientControllers = [];
   final DatabaseService _databaseService = DatabaseService();
   File? _image;
+  bool isEditing = false;
+  int? recipeKey; // Key for updating the recipe in Hive
+  @override
+  void initState() {
+    super.initState();
+    if (widget.recipe != null) {
+      isEditing = true;
+      nameController.text = widget.recipe!.recipeName;
+      sourceController.text = widget.recipe!.source;
+      _image = File(widget.recipe!.imagePath);
+      recipeKey = _databaseService.getKeyForRecipe(widget.recipe!);
+
+      for (var ingredient in widget.recipe!.ingredients) {
+        _ingredientControllers.add(TextEditingController(text: ingredient));
+      }
+    } else {
+      _ingredientControllers.add(TextEditingController());
+    }
+  }
 
   // Image picking function
   Future<void> _pickImage() async {
@@ -50,56 +73,60 @@ TextEditingController()];
 
   // Function to add recipe to Hive database
   void _saveRecipe() async {
-  if (_image == null || nameController.text.isEmpty || _ingredientControllers.any((c) => c.text.isEmpty)) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('Please add an image, recipe name, and ingredients')),
+    if (_image == null ||
+        nameController.text.isEmpty ||
+        _ingredientControllers.any((c) => c.text.isEmpty)) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+            content: Text('Please add an image, recipe name, and ingredients')),
+      );
+      return;
+    }
+
+    final recipe = AddRecipeModel(
+      imagePath: _image!.path,
+      recipeName: nameController.text,
+      source: sourceController.text,
+      ingredients: _ingredientControllers.map((c) => c.text).toList(),
     );
-    return;
+
+    if (isEditing && recipeKey != null) {
+      await _databaseService.updateRecipe(recipeKey!, recipe);
+    } else {
+      await _databaseService.addNewRecipe(recipe);
+    }
+
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+          content: Text(isEditing
+              ? 'Recipe updated successfully!'
+              : 'Recipe added successfully!')),
+    );
+
+    // Navigate to Search Screen and Refresh Recipes
+    Navigator.pushReplacement(
+      context,
+      MaterialPageRoute(builder: (context) => const SearchRecipeScreen()),
+    );
   }
-
-  final recipe = AddRecipeModel(
-    imagePath: _image!.path,
-    recipeName: nameController.text,
-    source: sourceController.text,
-    ingredients: _ingredientControllers.map((c) => c.text).toList(),
-  );
-
-  await _databaseService.addNewRecipe(recipe);
-
-  ScaffoldMessenger.of(context).showSnackBar(
-    const SnackBar(content: Text('Recipe added successfully!')),
-  );
-
-  // Clear fields after saving
-  setState(() {
-    nameController.clear();
-    sourceController.clear();
-    _ingredientControllers.forEach((controller) => controller.clear());
-    _image = null;
-  });
-
-  // Navigate to Search Screen and Refresh Recipes
-  Navigator.pushReplacement(
-    context,
-    MaterialPageRoute(builder: (context) => const SearchRecipeScreen()),
-  );
-}
-
-
 
   int _currentIndex = 2;
   void _onTabTapped(int index) {
     if (index == 1) {
-      Navigator.push(context, MaterialPageRoute(builder: (context) => SearchRecipeScreen()));
+      Navigator.push(context,
+          MaterialPageRoute(builder: (context) => SearchRecipeScreen()));
     }
     if (index == 2) {
-      Navigator.push(context, MaterialPageRoute(builder: (context) => AddRecipeScreen()));
+      Navigator.push(
+          context, MaterialPageRoute(builder: (context) => AddRecipeScreen()));
     }
-    if (index == 3){
-      Navigator.push(context, MaterialPageRoute(builder: (context) => SavedRecipesScreen()));
+    if (index == 3) {
+      Navigator.push(context,
+          MaterialPageRoute(builder: (context) => SavedRecipesScreen()));
     }
     if (index == 4) {
-      Navigator.push(context, MaterialPageRoute(builder: (context) => ProfileScreen(email: '')));
+      Navigator.push(context,
+          MaterialPageRoute(builder: (context) => ProfileScreen(email: '')));
     }
     setState(() {
       _currentIndex = index;
@@ -109,60 +136,72 @@ TextEditingController()];
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Add Recipe')),
+      backgroundColor: Colors.white,
+      appBar: AppBar(
+        elevation: 0,
+        backgroundColor: Colors.white,
+        title: Text(
+          "Add Recipe",
+          style: GoogleFonts.poppins(
+            fontSize: 18,
+            fontWeight: FontWeight.bold,
+            color: Colors.black87,
+          ),
+        ),
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back, color: Colors.black),
+          onPressed: () => Navigator.pop(context),
+        ),
+      ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(16.0),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const Text("Add Image", style: TextStyle(fontSize: 16)),
-            const SizedBox(height: 10),
-            GestureDetector(
-              onTap: _pickImage,
-              child: Container(
-                height: 150,
-                width: double.infinity,
-                decoration: BoxDecoration(
-                  color: Colors.grey[400],
-                  borderRadius: BorderRadius.circular(8),
-                  image: _image != null
-                      ? DecorationImage(
-                          image: FileImage(_image!),
-                          fit: BoxFit.cover,
-                        )
-                      : null,
+            Center(
+              child: GestureDetector(
+                onTap: _pickImage,
+                child: Stack(
+                  children: [
+                    CircleAvatar(
+                      radius: 60,
+                      backgroundColor: Colors.grey[300],
+                      backgroundImage:
+                          _image != null ? FileImage(_image!) : null,
+                      child: _image == null
+                          ? const Icon(Icons.camera_alt,
+                              color: Colors.grey, size: 30)
+                          : null,
+                    ),
+                    Positioned(
+                      bottom: 5,
+                      right: 5,
+                      child: Container(
+                        padding: const EdgeInsets.all(5),
+                        decoration: const BoxDecoration(
+                          color: Colors.white,
+                          shape: BoxShape.circle,
+                        ),
+                        child:
+                            const Icon(Icons.edit, color: Colors.red, size: 18),
+                      ),
+                    ),
+                  ],
                 ),
-                child: _image == null
-                    ? const Center(
-                        child: Icon(Icons.add_a_photo, color: Colors.white, size: 40),
-                      )
-                    : null,
               ),
             ),
+
             const SizedBox(height: 20),
-            const Text("Recipe Name", style: TextStyle(fontSize: 16)),
-            TextField(
-              controller: nameController,
-              decoration: InputDecoration(
-                hintText: "Enter your recipe name",
-                border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
-                filled: true,
-                fillColor: Colors.white,
-              ),
+            // Card based Input Fields
+            _buildCardInput(nameController, "Recipe Name", Icons.fastfood),
+            _buildCardInput(sourceController, "Source", Icons.source),
+            
+            const SizedBox(height: 15),
+            const Text(
+              "Ingredients",
+              style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
             ),
-            const SizedBox(height: 10),
-            const Text("Source", style: TextStyle(fontSize: 16)),
-            TextField(
-              controller: sourceController,
-              decoration: InputDecoration(
-                hintText: "Enter source name",
-                border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
-                filled: true,
-                fillColor: Colors.white.withOpacity(0.1),
-              ),
-            ),
-            const SizedBox(height: 10),
-            const Text("Ingredients", style: TextStyle(fontSize: 16)),
+            const SizedBox(height: 5),
             Column(
               children: _ingredientControllers.asMap().entries.map((entry) {
                 int index = entry.key;
@@ -172,23 +211,15 @@ TextEditingController()];
                   child: Row(
                     children: [
                       Expanded(
-                        child: TextField(
-                          controller: controller,
-                          decoration: InputDecoration(
-                            hintText: "Enter ingredient...",
-                            border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
-                            filled: true,
-                            fillColor: Colors.white,
-                          ),
-                        ),
-                      ),
-                      const SizedBox(width: 10),
+                          child: _buildCardInput(
+                              controller, "Ingredient", Icons.kitchen)),
                       IconButton(
                         icon: const Icon(Icons.add_circle, color: Colors.green),
                         onPressed: _addIngredientField,
                       ),
                       IconButton(
-                        icon: const Icon(Icons.remove_circle, color: Colors.red),
+                        icon:
+                            const Icon(Icons.remove_circle, color: Colors.red),
                         onPressed: () => _removeIngredientField(index),
                       ),
                     ],
@@ -197,18 +228,26 @@ TextEditingController()];
               }).toList(),
             ),
             const SizedBox(height: 20),
-            SizedBox(
-              width: double.infinity,
-              height: 50,
-              child: ElevatedButton(
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.red,
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-                ),
-                onPressed: _saveRecipe,
-                child: const Text(
-                  "Add Recipe",
-                  style: TextStyle(color: Colors.white, fontSize: 18),
+
+            
+            Center(
+              child: SizedBox(
+                width: 170,
+                height: 50,
+                child: ElevatedButton(
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.red,
+                    shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(10)),
+                  ),
+                  onPressed: _saveRecipe,
+                  child: const Text(
+                    "Add Recipe",
+                    style: TextStyle(
+                        color: Colors.white,
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold),
+                  ),
                 ),
               ),
             ),
@@ -216,18 +255,45 @@ TextEditingController()];
         ),
       ),
       bottomNavigationBar: BottomNavigationBar(
-    selectedItemColor: Colors.red,
-    unselectedItemColor: Colors.grey,
-    currentIndex: _currentIndex,
-    onTap: _onTabTapped,
-    items: const [
-      BottomNavigationBarItem(icon: Icon(Icons.home), label: 'Home'),
-      BottomNavigationBarItem(icon: Icon(Icons.search), label: 'Search'),
-      BottomNavigationBarItem(icon: Icon(Icons.add), label: 'Add'),
-      BottomNavigationBarItem(icon: Icon(Icons.save), label: 'Save'),
-      BottomNavigationBarItem(icon: Icon(Icons.person), label: 'Profile'),
-    ],
-  ),
+        selectedItemColor: Colors.red,
+        unselectedItemColor: Colors.grey,
+        currentIndex: _currentIndex,
+        onTap: _onTabTapped,
+        items: const [
+          BottomNavigationBarItem(icon: Icon(Icons.home), label: 'Home'),
+          BottomNavigationBarItem(icon: Icon(Icons.search), label: 'Search'),
+          BottomNavigationBarItem(icon: Icon(Icons.add), label: 'Add'),
+          BottomNavigationBarItem(icon: Icon(Icons.save), label: 'Save'),
+          BottomNavigationBarItem(icon: Icon(Icons.person), label: 'Profile'),
+        ],
+      ),
+    );
+  }
+
+  // Card-based Styled 
+  Widget _buildCardInput(
+      TextEditingController controller, String hint, IconData icon) {
+    return Card(
+      elevation: 3,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+        child: Row(
+          children: [
+            Icon(icon, color: Colors.red),
+            const SizedBox(width: 10),
+            Expanded(
+              child: TextField(
+                controller: controller,
+                decoration: InputDecoration(
+                  hintText: hint,
+                  border: InputBorder.none,
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
     );
   }
 }

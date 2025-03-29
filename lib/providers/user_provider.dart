@@ -24,7 +24,6 @@ class UserProvider with ChangeNotifier {
     _initializeProvider();
   }
 
-  // 🔹 FIX: Ensure Hive is initialized before loading recipes
   Future<void> _initializeProvider() async {
     await _dbService.init();  // Ensure Hive is initialized
     await _loadSavedRecipes();

@@ -1,20 +1,22 @@
 import 'package:flutter/material.dart';
 import 'package:ripefo/models/recipe_model.dart';
 import 'package:ripefo/screens/recipe_details.dart';
-
+import 'package:ripefo/services/hive_service.dart';
 
 //home page recipe card
 class RecipeCard extends StatelessWidget {
   final RecipeModel recipe;
   final VoidCallback? onAdd;
 
-
-  const RecipeCard({super.key, required this.recipe,this.onAdd});
+  const RecipeCard({super.key, required this.recipe, this.onAdd});
 
   @override
   Widget build(BuildContext context) {
     return GestureDetector(
-      onTap: () {
+      onTap: () async {
+        final dbService = DatabaseService();
+        await dbService.saveRecentRecipe(recipe);
+
         Navigator.push(
           context,
           MaterialPageRoute(
@@ -37,15 +39,13 @@ class RecipeCard extends StatelessWidget {
                 children: [
                   Text(
                     recipe.label,
-                    maxLines: 2,
+                    maxLines: 1,
                     style: const TextStyle(
                         fontSize: 16, fontWeight: FontWeight.bold),
                   ),
-                  const SizedBox(height: 4), // Small space
-                  // Text(
-                  //   "Calories: ${recipe.calories.toStringAsFixed(2)} kcal",
-                  //   style: const TextStyle(fontSize: 14, color: Colors.grey),
-                  // ),
+                  const SizedBox(height: 4),
+                  Text("calories: ${recipe.calories?.toStringAsFixed(1)} ",
+                      style: const TextStyle(fontSize: 12)),
                 ],
               ),
             ),

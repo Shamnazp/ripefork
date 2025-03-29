@@ -7,7 +7,6 @@ import 'package:ripefo/screens/manage_profile.dart';
 import 'package:ripefo/screens/saved_recipe.dart';
 import 'package:ripefo/screens/settings.dart';
 
-
 class ProfileScreen extends StatelessWidget {
   final String email;
   const ProfileScreen({super.key, required this.email});
@@ -33,8 +32,10 @@ class ProfileScreen extends StatelessWidget {
           IconButton(
             icon: const Icon(Icons.settings, color: Colors.black87),
             onPressed: () {
-              Navigator.push(context,
-                  MaterialPageRoute(builder: (context) => SavedRecipesScreen()));
+              Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                      builder: (context) => SettingsScreen()));
             },
           ),
         ],
@@ -53,8 +54,7 @@ class ProfileScreen extends StatelessWidget {
                   children: [
                     CircleAvatar(
                       radius: 35,
-                      backgroundColor:
-                          Colors.grey[300], 
+                      backgroundColor: Colors.grey[300],
                       backgroundImage: userProvider.profileImage.isNotEmpty
                           ? FileImage(File(userProvider.profileImage))
                               as ImageProvider
@@ -62,8 +62,7 @@ class ProfileScreen extends StatelessWidget {
                       // profile empty aaumbo image background grey aavan
                       child: userProvider.profileImage.isEmpty
                           ? const Icon(Icons.person,
-                              size: 40,
-                              color: Colors.white) 
+                              size: 40, color: Colors.white)
                           : null, // image indel icon kaanand nikkan
                     ),
                     const SizedBox(width: 10),

@@ -1,7 +1,7 @@
 import 'package:hive/hive.dart';
 part 'recipe_model.g.dart';
 
-// =================== AddRecipeModel ===================
+// =================== RecipeModel ===================
 @HiveType(typeId: 1)
 class RecipeModel {
   @HiveField(0)
@@ -22,6 +22,20 @@ class RecipeModel {
   @HiveField(5)
   DateTime? visitedDate;
 
+  @HiveField(6)
+  double? calories;
+
+  @HiveField(7)
+  List<String>? healthLabels; // ✅ FIXED: Changed to List<String>
+
+
+@HiveField(8)
+  Map<String, dynamic>? totalNutrients; // ✅ ADDED: Total Nutrients Map
+
+
+@HiveField(9)
+  List<String>? instructions;
+
   RecipeModel({
     required this.uri,
     required this.label,
@@ -29,6 +43,11 @@ class RecipeModel {
     required this.source,
     required this.ingredients,
     this.visitedDate,
+    this.calories, // Initialize Calories
+    this.healthLabels,
+    this.totalNutrients,
+    this.instructions, // Include instructions
+
   });
 
 
@@ -42,7 +61,24 @@ class RecipeModel {
       ingredients: (json['ingredientLines'] as List<dynamic>?)
         ?.map((item) => item.toString())
         .toList() ?? [],
-      
+
+        calories: json['calories'] != null
+          ? (json['calories'] as num).toDouble()
+          : 0.0, // Fetch Calories
+
+ healthLabels: json['healthLabels'] != null
+          ? List<String>.from(json['healthLabels']) // ✅ FIXED: Parse correctly
+          : [],
+          
+
+totalNutrients: json['totalNutrients'] != null
+          ? Map<String, dynamic>.from(json['totalNutrients']) // ✅ ADDED: Parse correctly
+          : {}, 
+
+    
+      instructions: json['instructions'] != null
+          ? List<String>.from(json['instructions']) // If instructions exist
+          : [json['url'] ?? "No instructions available"], 
     );
   }
   Map<String, dynamic> toJson() {
@@ -52,6 +88,11 @@ class RecipeModel {
       'image': image,
       'source': source,
       'ingredients': ingredients,
+      'calories': calories, // Include Calories in JSON
+      'healthLabels': healthLabels, // ✅ FIXED: Include in JSON
+      'totalNutrients': totalNutrients, // ✅ Include Total Nutrients in JSON
+      'instructions': instructions, // ✅ Include instructions
+
 
     };
   }
@@ -78,13 +119,13 @@ class CategoryModel {
         name: "Veg",
         imageUrl: "https://example.com/veg.jpg",
         query: "vegetarian",
-        subcategories: ["Tomato", "Onion", "Green Chilly", "Pumpkin"],
+        subcategories: ["Tomato", "Onion", "Green Chilly", "Pumpkin","Potato","Carrot","Radish"],
       ),
       CategoryModel(
         name: "Non-Veg",
         imageUrl: "https://example.com/nonveg.jpg",
-        query: "nonveg",
-        subcategories: ["Chicken", "Beef", "Fish", "Prawns", "Meat"],
+        query: "non-veg",
+        subcategories: ["Chicken", "Beef", "Fish", "Prawns", "Meat","Turkey","Duck","Pork","Squid",],
       ),
     ];
   }
@@ -105,6 +146,9 @@ class AddRecipeModel {
   @HiveField(3)
   List<String> ingredients;
 
+  
+  
+
   AddRecipeModel({
     required this.imagePath,
     required this.recipeName,
@@ -115,7 +159,7 @@ class AddRecipeModel {
 
 
 
-// ================
+// ======save model==========
 @HiveType(typeId: 4)
 class SavedModel {
   @HiveField(0)

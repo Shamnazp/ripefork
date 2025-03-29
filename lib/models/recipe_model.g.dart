@@ -23,13 +23,17 @@ class RecipeModelAdapter extends TypeAdapter<RecipeModel> {
       source: fields[3] as String,
       ingredients: (fields[4] as List).cast<String>(),
       visitedDate: fields[5] as DateTime?,
+      calories: fields[6] as double?,
+      healthLabels: (fields[7] as List?)?.cast<String>(),
+      totalNutrients: (fields[8] as Map?)?.cast<String, dynamic>(),
+      instructions: (fields[9] as List?)?.cast<String>(),
     );
   }
 
   @override
   void write(BinaryWriter writer, RecipeModel obj) {
     writer
-      ..writeByte(6)
+      ..writeByte(10)
       ..writeByte(0)
       ..write(obj.uri)
       ..writeByte(1)
@@ -41,7 +45,15 @@ class RecipeModelAdapter extends TypeAdapter<RecipeModel> {
       ..writeByte(4)
       ..write(obj.ingredients)
       ..writeByte(5)
-      ..write(obj.visitedDate);
+      ..write(obj.visitedDate)
+      ..writeByte(6)
+      ..write(obj.calories)
+      ..writeByte(7)
+      ..write(obj.healthLabels)
+      ..writeByte(8)
+      ..write(obj.totalNutrients)
+      ..writeByte(9)
+      ..write(obj.instructions);
   }
 
   @override

@@ -11,4 +11,9 @@ class CartItem extends HiveObject {
   int quantity;
 
   CartItem({required this.ingredient, this.quantity = 1});
+   // Add a method to update quantity
+  void updateQuantity(int newQuantity) {
+    quantity = newQuantity;
+    save(); // Save changes to Hive database
+  }
 }

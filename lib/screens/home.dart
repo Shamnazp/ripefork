@@ -10,7 +10,6 @@ import 'package:ripefo/screens/search_recipe.dart';
 import 'package:ripefo/services/api_service.dart';
 import 'package:ripefo/services/hive_service.dart';
 
-
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
   @override
@@ -23,67 +22,87 @@ class _HomeScreenState extends State<HomeScreen> {
   final DatabaseService _databaseService = DatabaseService();
   List<AddRecipeModel> recipes = [];
 
-  
-
-
-
   @override
-  void initState() {
-    super.initState();
-    DatabaseService().init();
-  }
-  
+void initState() {
+  super.initState();
+  DatabaseService().init();
+  _fetchDefaultRecipes(); // Fetch default recipes when the home screen loads
+}
+
+void _fetchDefaultRecipes() {
+  setState(() {
+    _recipeFuture = RecipeService.fetchRecipes("popular"); // Fetch popular recipes or any default category
+  });
+}
+
+
   List<CategoryModel> categories = CategoryModel.getCategories();
   CategoryModel? selectedCategory;
   String? selectedSubcategory;
 
   void _setCategory(CategoryModel category) {
     setState(() {
-      
       selectedCategory = category;
       selectedSubcategory = null;
+      print("Selected category: ${category.name}, Query: ${category.query}");
       _searchRecipes();
     });
   }
 
-  void _setSubcategory(String? subcategory) { // Allow null value
-  setState(() {
-    selectedSubcategory = subcategory; // Set to null if "All" is selected
-    _searchRecipes();
-  });
-}
+  void _setSubcategory(String? subcategory) {
+    setState(() {
+      selectedSubcategory = subcategory;
 
+      if (selectedSubcategory == null && selectedCategory != null) {
+        String query = selectedCategory!.query == "nonveg"
+            ? "non-veg"
+            : selectedCategory!.query;
+        print("Fetching all recipes for category: $query");
+        _recipeFuture = RecipeService.fetchRecipes(query);
+      } else if (selectedSubcategory != null) {
+        print("Fetching subcategory recipes: $selectedSubcategory");
+        _recipeFuture = RecipeService.fetchRecipes(selectedSubcategory!);
+      } else {
+        print("Fetching all recipes");
+        _recipeFuture = RecipeService.fetchRecipes("");
+      }
+    });
+  }
 
   void _searchRecipes() {
-  setState(() {
-    String query = _searchController.text.trim();
-
-    if (selectedSubcategory != null) {
-      query = selectedSubcategory!; // Fetch subcategory-specific recipes
-    } else if (selectedCategory != null) {
-      query = selectedCategory!.query; // Fetch all recipes for the selected category
-    } else {
-      query = ""; // Default empty query to fetch all recipes
-    }
-
-    _recipeFuture = RecipeService.fetchRecipes(query);
-  });
-}
-
+    setState(() {
+      String query = _searchController.text.trim();
+      if (query.isNotEmpty) {
+        _recipeFuture = RecipeService.fetchRecipes(query);
+      }
+      else if (selectedSubcategory != null) {
+        _recipeFuture = RecipeService.fetchRecipes(selectedSubcategory!);
+      } else if (selectedCategory != null) {
+        _recipeFuture = RecipeService.fetchRecipes(selectedCategory!.query);
+      }
+      else {
+        _recipeFuture = RecipeService.fetchRecipes("");
+      }
+    });
+  }
 
   int _currentIndex = 0;
   void _onTabTapped(int index) {
     if (index == 1) {
-      Navigator.push(context, MaterialPageRoute(builder: (context) => SearchRecipeScreen()));
+      Navigator.push(context,
+          MaterialPageRoute(builder: (context) => SearchRecipeScreen()));
     }
     if (index == 2) {
-      Navigator.push(context, MaterialPageRoute(builder: (context) => AddRecipeScreen()));
+      Navigator.push(
+          context, MaterialPageRoute(builder: (context) => AddRecipeScreen()));
     }
-    if (index == 3){
-      Navigator.push(context, MaterialPageRoute(builder: (context) => SavedRecipesScreen()));
+    if (index == 3) {
+      Navigator.push(context,
+          MaterialPageRoute(builder: (context) => SavedRecipesScreen()));
     }
     if (index == 4) {
-      Navigator.push(context, MaterialPageRoute(builder: (context) => ProfileScreen(email: '')));
+      Navigator.push(context,
+          MaterialPageRoute(builder: (context) => ProfileScreen(email: '')));
     }
     setState(() {
       _currentIndex = index;
@@ -145,6 +164,9 @@ class _HomeScreenState extends State<HomeScreen> {
                     borderSide: BorderSide.none,
                   ),
                 ),
+                onChanged: (value) {
+                  _searchRecipes();
+                },
                 onSubmitted: (_) => _searchRecipes(),
               ),
 
@@ -167,25 +189,37 @@ class _HomeScreenState extends State<HomeScreen> {
                 child: Row(
                   children: categories.map((category) {
                     bool isSelected = selectedCategory?.name == category.name;
-                    Color borderColor = isSelected
-                        ? (category.name == "Veg" ? Colors.green : Colors.red)
-                        : Colors.grey;
+                    Color borderColor =
+                        category.name == "Veg" ? Colors.green : Colors.red;
+                    Color fillColor = isSelected
+                        ? borderColor.withOpacity(0.3)
+                        : Colors.white;
+
                     return GestureDetector(
                       onTap: () => _setCategory(category),
-                      child: Container(
-                        margin: const EdgeInsets.symmetric(horizontal: 8),
-                        padding: const EdgeInsets.all(8),
+                      child: AnimatedContainer(
+                        duration: const Duration(milliseconds: 300),
+                        margin: const EdgeInsets.symmetric(
+                            horizontal: 4), 
+                        padding: const EdgeInsets.all(4), 
                         decoration: BoxDecoration(
-                          border: Border.all(color: borderColor, width: 2),
-                          borderRadius: BorderRadius.circular(8),
-                          color: isSelected ? borderColor : Colors.white,
+                          color: fillColor,
+                          border: Border.all(
+                            color: borderColor,
+                            width: isSelected
+                                ? 2.5
+                                : 1.5, 
+                          ),
+                          borderRadius:
+                              BorderRadius.circular(6), 
                         ),
-                        child: Text(
-                          category.name,
-                          style: TextStyle(
-                              fontWeight: FontWeight.bold,
-                              color:
-                                  isSelected ? Colors.white : Colors.black),
+                        child: Container(
+                          width: 20, 
+                          height: 20, 
+                          decoration: BoxDecoration(
+                            shape: BoxShape.circle,
+                            color: borderColor,
+                          ),
                         ),
                       ),
                     );
@@ -195,67 +229,75 @@ class _HomeScreenState extends State<HomeScreen> {
 
               const SizedBox(height: 15),
 
-              // Subcategory List (Dynamic
-              // Subcategory List (Dynamic)
-if (selectedCategory != null)
-  SingleChildScrollView(
-    scrollDirection: Axis.horizontal,
-    child: Row(
-      children: [
-        // "All" button for the selected category
-        GestureDetector(
-          onTap: () => _setSubcategory(null), // Reset subcategory
-          child: Container(
-            margin: const EdgeInsets.symmetric(horizontal: 8),
-            padding: const EdgeInsets.all(8),
-            decoration: BoxDecoration(
-              color: selectedSubcategory == null ? Colors.blue : Colors.white,
-              borderRadius: BorderRadius.circular(8),
-              border: Border.all(
-                color: selectedSubcategory == null ? Colors.blue : Colors.grey,
-                width: 2,
-              ),
-            ),
-            child: Text(
-              "All",
-              style: TextStyle(
-                fontWeight: FontWeight.bold,
-                color: selectedSubcategory == null ? Colors.white : Colors.black,
-              ),
-            ),
-          ),
-        ),
+              // Subcategory List 
+              if (selectedCategory != null)
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 8),
+                  child: Wrap(
+                    spacing: 8.0, 
+                    runSpacing: 8.0, 
+                    children: [
+                     
+                      GestureDetector(
+                        onTap: () => _setSubcategory(null), 
+                        child: Container(
+                          padding: const EdgeInsets.all(8),
+                          decoration: BoxDecoration(
+                            color: selectedSubcategory == null
+                                ? const Color.fromARGB(255, 243, 33, 33)
+                                : Colors.white,
+                            borderRadius: BorderRadius.circular(8),
+                            border: Border.all(
+                              color: selectedSubcategory == null
+                                  ? Color.fromARGB(255, 243, 33, 33)
+                                  : Colors.grey,
+                              width: 2,
+                            ),
+                          ),
+                          child: Text(
+                            "All",
+                            style: TextStyle(
+                              fontWeight: FontWeight.bold,
+                              color: selectedSubcategory == null
+                                  ? Colors.white
+                                  : Colors.black,
+                            ),
+                          ),
+                        ),
+                      ),
 
-        // Other subcategories
-        ...selectedCategory!.subcategories.map((subcategory) {
-          bool isSelected = selectedSubcategory == subcategory;
-          return GestureDetector(
-            onTap: () => _setSubcategory(subcategory),
-            child: Container(
-              margin: const EdgeInsets.symmetric(horizontal: 8),
-              padding: const EdgeInsets.all(8),
-              decoration: BoxDecoration(
-                color: isSelected ? Colors.blue : Colors.white,
-                borderRadius: BorderRadius.circular(8),
-                border: Border.all(
-                  color: isSelected ? Colors.blue : Colors.grey,
-                  width: 2,
+                      // Other subcategories
+                      ...selectedCategory!.subcategories.map((subcategory) {
+                        bool isSelected = selectedSubcategory == subcategory;
+                        return GestureDetector(
+                          onTap: () => _setSubcategory(subcategory),
+                          child: Container(
+                            padding: const EdgeInsets.all(8),
+                            decoration: BoxDecoration(
+                              color: isSelected
+                                  ? Color.fromARGB(255, 243, 33, 33)
+                                  : Colors.white,
+                              borderRadius: BorderRadius.circular(8),
+                              border: Border.all(
+                                color: isSelected
+                                    ? Color.fromARGB(255, 243, 33, 33)
+                                    : Colors.grey,
+                                width: 2,
+                              ),
+                            ),
+                            child: Text(
+                              subcategory,
+                              style: TextStyle(
+                                fontWeight: FontWeight.bold,
+                                color: isSelected ? Colors.white : Colors.black,
+                              ),
+                            ),
+                          ),
+                        );
+                      }).toList(),
+                    ],
+                  ),
                 ),
-              ),
-              child: Text(
-                subcategory,
-                style: TextStyle(
-                  fontWeight: FontWeight.bold,
-                  color: isSelected ? Colors.white : Colors.black,
-                ),
-              ),
-            ),
-          );
-        }).toList(),
-      ],
-    ),
-  ),
-
 
               const SizedBox(height: 15),
 
@@ -284,14 +326,15 @@ if (selectedCategory != null)
                                 child: Text("Error: ${snapshot.error}"));
                           } else if (!snapshot.hasData ||
                               snapshot.data!.isEmpty) {
-                            return const Center(child: Text("No recipes found"));
+                            return const Center(
+                                child: Text("No recipes found"));
                           }
                           final recipes = snapshot.data ?? [];
                           return ListView.builder(
                             itemCount: recipes.length,
                             itemBuilder: (context, index) {
-                              final recipe =
-                                  RecipeModel.fromJson(recipes[index]['recipe']);
+                              final recipe = RecipeModel.fromJson(
+                                  recipes[index]['recipe']);
                               return RecipeCard(recipe: recipe);
                             },
                           );

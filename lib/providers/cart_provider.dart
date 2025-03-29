@@ -26,6 +26,16 @@ class CartProvider with ChangeNotifier {
     notifyListeners();
   }
 
+  void updateQuantity(CartItem item, int newQuantity) {
+    if (newQuantity > 0) {
+      item.quantity = newQuantity;
+      item.save();  // Saves the updated quantity in Hive
+    } else {
+      _cartBox.delete(item.key); // Remove item if quantity is 0
+    }
+    notifyListeners();
+  }
+
   void clearCart() {
     _cartBox.clear();
     notifyListeners();
