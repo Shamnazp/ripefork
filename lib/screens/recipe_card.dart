@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:ripefo/models/recipe_model.dart';
 import 'package:ripefo/screens/recipe_details.dart';
 import 'package:ripefo/services/hive_service.dart';
+import 'package:cached_network_image/cached_network_image.dart';
 
 //home page recipe card
 class RecipeCard extends StatelessWidget {
@@ -30,8 +31,17 @@ class RecipeCard extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Image.network(recipe.image,
-                height: 140, width: double.infinity, fit: BoxFit.cover),
+            CachedNetworkImage(
+              imageUrl: recipe.image,
+              height: 140,
+              width: double.infinity,
+              fit: BoxFit.cover,
+              placeholder: (context, url) => Container(
+                height: 140,
+                color: Colors.grey[200],
+                child: const Center(child: CircularProgressIndicator()),
+              ),
+            ),
             Padding(
               padding: const EdgeInsets.all(12),
               child: Column(

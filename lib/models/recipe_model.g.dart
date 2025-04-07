@@ -82,13 +82,15 @@ class AddRecipeModelAdapter extends TypeAdapter<AddRecipeModel> {
       recipeName: fields[1] as String,
       source: fields[2] as String,
       ingredients: (fields[3] as List).cast<String>(),
+      calories: fields[4] as int,
+      instructions: fields[5] as String,
     );
   }
 
   @override
   void write(BinaryWriter writer, AddRecipeModel obj) {
     writer
-      ..writeByte(4)
+      ..writeByte(6)
       ..writeByte(0)
       ..write(obj.imagePath)
       ..writeByte(1)
@@ -96,7 +98,11 @@ class AddRecipeModelAdapter extends TypeAdapter<AddRecipeModel> {
       ..writeByte(2)
       ..write(obj.source)
       ..writeByte(3)
-      ..write(obj.ingredients);
+      ..write(obj.ingredients)
+      ..writeByte(4)
+      ..write(obj.calories)
+      ..writeByte(5)
+      ..write(obj.instructions);
   }
 
   @override

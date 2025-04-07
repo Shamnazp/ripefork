@@ -22,6 +22,8 @@ class _AddRecipeScreenState extends State<AddRecipeScreen> {
   final TextEditingController nameController = TextEditingController();
   final TextEditingController sourceController = TextEditingController();
   final List<TextEditingController> _ingredientControllers = [];
+  final TextEditingController caloriesController = TextEditingController();
+final TextEditingController instructionsController = TextEditingController();
   final DatabaseService _databaseService = DatabaseService();
   File? _image;
   bool isEditing = false;
@@ -35,6 +37,9 @@ class _AddRecipeScreenState extends State<AddRecipeScreen> {
       sourceController.text = widget.recipe!.source;
       _image = File(widget.recipe!.imagePath);
       recipeKey = _databaseService.getKeyForRecipe(widget.recipe!);
+      // Load New Fields if Editing
+    caloriesController.text = widget.recipe!.calories.toString();
+    instructionsController.text = widget.recipe!.instructions;
 
       for (var ingredient in widget.recipe!.ingredients) {
         _ingredientControllers.add(TextEditingController(text: ingredient));
@@ -73,42 +78,47 @@ class _AddRecipeScreenState extends State<AddRecipeScreen> {
 
   // Function to add recipe to Hive database
   void _saveRecipe() async {
-    if (_image == null ||
-        nameController.text.isEmpty ||
-        _ingredientControllers.any((c) => c.text.isEmpty)) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-            content: Text('Please add an image, recipe name, and ingredients')),
-      );
-      return;
-    }
-
-    final recipe = AddRecipeModel(
-      imagePath: _image!.path,
-      recipeName: nameController.text,
-      source: sourceController.text,
-      ingredients: _ingredientControllers.map((c) => c.text).toList(),
-    );
-
-    if (isEditing && recipeKey != null) {
-      await _databaseService.updateRecipe(recipeKey!, recipe);
-    } else {
-      await _databaseService.addNewRecipe(recipe);
-    }
-
+  if (_image == null ||
+      nameController.text.isEmpty ||
+      _ingredientControllers.any((c) => c.text.isEmpty) ||
+      caloriesController.text.isEmpty ||
+      instructionsController.text.isEmpty) {
     ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-          content: Text(isEditing
-              ? 'Recipe updated successfully!'
-              : 'Recipe added successfully!')),
+      const SnackBar(
+          content: Text('Please fill all fields including calories and instructions')),
     );
-
-    // Navigate to Search Screen and Refresh Recipes
-    Navigator.pushReplacement(
-      context,
-      MaterialPageRoute(builder: (context) => const SearchRecipeScreen()),
-    );
+    return;
   }
+
+  final recipe = AddRecipeModel(
+    imagePath: _image!.path,
+    recipeName: nameController.text,
+    source: sourceController.text,
+    ingredients: _ingredientControllers.map((c) => c.text).toList(),
+    calories: int.tryParse(caloriesController.text) ?? 0, // Convert to int
+    instructions: instructionsController.text,
+  );
+
+  if (isEditing && recipeKey != null) {
+    await _databaseService.updateRecipe(recipeKey!, recipe);
+  } else {
+    await _databaseService.addNewRecipe(recipe);
+  }
+
+  ScaffoldMessenger.of(context).showSnackBar(
+    SnackBar(
+        content: Text(isEditing
+            ? 'Recipe updated successfully!'
+            : 'Recipe added successfully!')),
+  );
+
+  // Navigate to Search Screen and Refresh Recipes
+  Navigator.pushReplacement(
+    context,
+    MaterialPageRoute(builder: (context) => const SearchRecipeScreen()),
+  );
+}
+
 
   int _currentIndex = 2;
   void _onTabTapped(int index) {
@@ -228,6 +238,40 @@ class _AddRecipeScreenState extends State<AddRecipeScreen> {
               }).toList(),
             ),
             const SizedBox(height: 20),
+            // Calories Input
+_buildCardInput(caloriesController, "Calories", Icons.local_fire_department),
+
+const SizedBox(height: 10),
+
+// Instructions Input (Multiline)
+Card(
+  elevation: 3,
+  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+  child: Padding(
+    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+    child: Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          children: [
+            Icon(Icons.notes, color: Colors.red),
+            const SizedBox(width: 10),
+            Text("Instructions", style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+          ],
+        ),
+        TextField(
+          controller: instructionsController,
+          maxLines: 5,
+          decoration: const InputDecoration(
+            hintText: "Enter detailed cooking instructions...",
+            border: InputBorder.none,
+          ),
+        ),
+      ],
+    ),
+  ),
+),
+
 
             
             Center(

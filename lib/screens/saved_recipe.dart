@@ -1,3 +1,4 @@
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
@@ -59,15 +60,28 @@ class SavedRecipesScreen extends StatelessWidget {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           ClipRRect(
-                            borderRadius: const BorderRadius.vertical(
-                                top: Radius.circular(15)),
-                            child: Image.network(
-                              recipe.image,
-                              height: 120,
-                              width: double.infinity,
-                              fit: BoxFit.cover,
-                            ),
-                          ),
+  borderRadius: const BorderRadius.vertical(top: Radius.circular(15)),
+  child: CachedNetworkImage(
+    imageUrl: recipe.image,
+    height: 120,
+    width: double.infinity,
+    fit: BoxFit.cover,
+    placeholder: (context, url) => Container(
+      height: 120,
+      color: Colors.grey[200],
+      child: const Center(
+        child: CircularProgressIndicator(strokeWidth: 2),
+      ),
+    ),
+    errorWidget: (context, url, error) => Container(
+      height: 120,
+      color: Colors.grey[200],
+      child: const Center(
+        child: Icon(Icons.image_not_supported, color: Colors.grey),
+      ),
+    ),
+  ),
+),
                           Padding(
                             padding: const EdgeInsets.all(8.0),
                             child: Column(

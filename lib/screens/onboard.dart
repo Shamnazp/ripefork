@@ -22,34 +22,34 @@ class OnBoard extends StatelessWidget {
             ),
           ),
 
-          // Skip Button
-          Positioned(
-            top: 40,
-            right: 20,
-            child: ElevatedButton(
-              onPressed: () {
-                print('skip');
-                Navigator.pushReplacement(
-                  context,
-                  MaterialPageRoute(builder: (context) => LoginScreen()));
-              },
-              style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.grey[200],
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(10),
-                ),
-              ),
-              child: const Text(
-                'Skip',
-                style: TextStyle(
-                  color: Colors.black, // Changed text color to black
-                  fontSize: 16,
-                ),
-              ),
-            ),
-          ),
+          // // Skip Button
+          // Positioned(
+          //   top: 40,
+          //   right: 20,
+          //   child: ElevatedButton(
+          //     onPressed: () {
+          //       print('skip');
+          //       // Navigator.pushReplacement(
+          //       //   context,
+          //       //   MaterialPageRoute(builder: (context) => LoginScreen()));
+          //     },
+          //     style: ElevatedButton.styleFrom(
+          //       backgroundColor: Colors.grey[200],
+          //       padding:
+          //           const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+          //       shape: RoundedRectangleBorder(
+          //         borderRadius: BorderRadius.circular(10),
+          //       ),
+          //     ),
+          //     child: const Text(
+          //       'Skip',
+          //       style: TextStyle(
+          //         color: Colors.black, // Changed text color to black
+          //         fontSize: 16,
+          //       ),
+          //     ),
+          //   ),
+          // ),
 
           // Text Overlay
           Positioned(
@@ -121,7 +121,7 @@ class OnBoard extends StatelessWidget {
                   Navigator.pushReplacement(
                     context,
                     MaterialPageRoute(
-                      builder: (context) => HomeScreen(),
+                      builder: (context) => HomeScreen(email: '',),
                     ),
                   );
                   print("start cooking...");

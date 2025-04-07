@@ -1,0 +1,2 @@
+D:/projects/ripefo/android/app/.cxx/Debug/w31i1f6p/armeabi-v7a/CMakeFiles/edit_cache.dir
+D:/projects/ripefo/android/app/.cxx/Debug/w31i1f6p/armeabi-v7a/CMakeFiles/rebuild_cache.dir

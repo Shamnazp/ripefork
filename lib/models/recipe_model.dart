@@ -146,16 +146,22 @@ class AddRecipeModel {
   @HiveField(3)
   List<String> ingredients;
 
-  
-  
+  @HiveField(4) 
+  int calories; // New Field
+
+  @HiveField(5) 
+  String instructions; // New Field
 
   AddRecipeModel({
     required this.imagePath,
     required this.recipeName,
     required this.source,
     required this.ingredients,
+    required this.calories,
+    required this.instructions,
   });
 }
+
 
 
 

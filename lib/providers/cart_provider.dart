@@ -4,7 +4,6 @@ import 'package:ripefo/models/cart_model.dart';
 
 class CartProvider with ChangeNotifier {
   final Box<CartItem> _cartBox = Hive.box<CartItem>('shoppingCart');
-
   List<CartItem> get cartItems => _cartBox.values.toList();
 
   void addToCart(String ingredient) {
@@ -20,7 +19,6 @@ class CartProvider with ChangeNotifier {
     }
     notifyListeners();
   }
-
   void removeFromCart(int index) {
     _cartBox.deleteAt(index);
     notifyListeners();

@@ -1,6 +1,10 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:provider/provider.dart';
 import 'package:ripefo/models/recipe_model.dart';
+import 'package:ripefo/providers/user_provider.dart';
 import 'package:ripefo/screens/add_recipe.dart';
 import 'package:ripefo/screens/manage_profile.dart';
 import 'package:ripefo/screens/profile.dart';
@@ -11,7 +15,8 @@ import 'package:ripefo/services/api_service.dart';
 import 'package:ripefo/services/hive_service.dart';
 
 class HomeScreen extends StatefulWidget {
-  const HomeScreen({super.key});
+  final String email; // Accept email
+  const HomeScreen({super.key, required this.email});
   @override
   _HomeScreenState createState() => _HomeScreenState();
 }
@@ -23,18 +28,18 @@ class _HomeScreenState extends State<HomeScreen> {
   List<AddRecipeModel> recipes = [];
 
   @override
-void initState() {
-  super.initState();
-  DatabaseService().init();
-  _fetchDefaultRecipes(); // Fetch default recipes when the home screen loads
-}
+  void initState() {
+    super.initState();
+    DatabaseService().init();
+    _fetchDefaultRecipes(); // Fetch default recipes when the home screen loads
+  }
 
-void _fetchDefaultRecipes() {
-  setState(() {
-    _recipeFuture = RecipeService.fetchRecipes("popular"); // Fetch popular recipes or any default category
-  });
-}
-
+  void _fetchDefaultRecipes() {
+    setState(() {
+      _recipeFuture = RecipeService.fetchRecipes(
+          "popular"); // Fetch popular recipes or any default category
+    });
+  }
 
   List<CategoryModel> categories = CategoryModel.getCategories();
   CategoryModel? selectedCategory;
@@ -72,15 +77,23 @@ void _fetchDefaultRecipes() {
   void _searchRecipes() {
     setState(() {
       String query = _searchController.text.trim();
-      if (query.isNotEmpty) {
-        _recipeFuture = RecipeService.fetchRecipes(query);
+
+      if (query.isEmpty) {
+        // Explicitly tell RecipeService to return all recipes
+        _recipeFuture = RecipeService.fetchRecipes("all");
+        return;
       }
-      else if (selectedSubcategory != null) {
+
+      // Existing logic (preserved)
+      if (query.isNotEmpty) {
+        selectedCategory = null;
+        selectedSubcategory = null;
+        _recipeFuture = RecipeService.fetchRecipes(query);
+      } else if (selectedSubcategory != null) {
         _recipeFuture = RecipeService.fetchRecipes(selectedSubcategory!);
       } else if (selectedCategory != null) {
         _recipeFuture = RecipeService.fetchRecipes(selectedCategory!.query);
-      }
-      else {
+      } else {
         _recipeFuture = RecipeService.fetchRecipes("");
       }
     });
@@ -124,27 +137,45 @@ void _fetchDefaultRecipes() {
               // Profile Section
               Row(
                 children: [
-                  const CircleAvatar(
-                    radius: 22,
-                    backgroundImage: NetworkImage(
-                      'https://th.bing.com/th?id=OIP.Blj2M36K5WYTyNd6v6Jz0QHaJf&w=220&h=283&c=8&rs=1&qlt=90&o=6&dpr=1.1&pid=3.1&rm=2',
-                    ),
-                  ),
-                  const SizedBox(width: 20),
-                  GestureDetector(
-                    onTap: () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) => ProfileScreen(email: ''),
-                        ),
+                  Consumer<UserProvider>(
+                    builder: (context, userProvider, child) {
+                      return Row(
+                        children: [
+                          CircleAvatar(
+                            radius: 22,
+                            backgroundColor: Colors.grey[300],
+                            backgroundImage: userProvider
+                                    .profileImage.isNotEmpty
+                                ? FileImage(File(userProvider.profileImage))
+                                    as ImageProvider
+                                : const AssetImage('assets/default_user.png'),
+                            child: userProvider.profileImage.isEmpty
+                                ? const Icon(Icons.person,
+                                    size: 20, color: Colors.white)
+                                : null,
+                          ),
+                          const SizedBox(width: 20),
+                          GestureDetector(
+                            onTap: () {
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (context) =>
+                                      ProfileScreen(email: ''),
+                                ),
+                              );
+                            },
+                            child: Text(
+                              'Hey there, 👋\n${userProvider.name}',
+                              style: GoogleFonts.poppins(
+                                fontSize: 18,
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
+                          ),
+                        ],
                       );
                     },
-                    child: Text(
-                      'Hey there, 👋\nShamnas P',
-                      style: GoogleFonts.poppins(
-                          fontSize: 18, fontWeight: FontWeight.w600),
-                    ),
                   ),
                 ],
               ),
@@ -199,23 +230,19 @@ void _fetchDefaultRecipes() {
                       onTap: () => _setCategory(category),
                       child: AnimatedContainer(
                         duration: const Duration(milliseconds: 300),
-                        margin: const EdgeInsets.symmetric(
-                            horizontal: 4), 
-                        padding: const EdgeInsets.all(4), 
+                        margin: const EdgeInsets.symmetric(horizontal: 4),
+                        padding: const EdgeInsets.all(4),
                         decoration: BoxDecoration(
                           color: fillColor,
                           border: Border.all(
                             color: borderColor,
-                            width: isSelected
-                                ? 2.5
-                                : 1.5, 
+                            width: isSelected ? 2.5 : 1.5,
                           ),
-                          borderRadius:
-                              BorderRadius.circular(6), 
+                          borderRadius: BorderRadius.circular(6),
                         ),
                         child: Container(
-                          width: 20, 
-                          height: 20, 
+                          width: 20,
+                          height: 20,
                           decoration: BoxDecoration(
                             shape: BoxShape.circle,
                             color: borderColor,
@@ -229,17 +256,16 @@ void _fetchDefaultRecipes() {
 
               const SizedBox(height: 15),
 
-              // Subcategory List 
+              // Subcategory List
               if (selectedCategory != null)
                 Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 8),
                   child: Wrap(
-                    spacing: 8.0, 
-                    runSpacing: 8.0, 
+                    spacing: 8.0,
+                    runSpacing: 8.0,
                     children: [
-                     
                       GestureDetector(
-                        onTap: () => _setSubcategory(null), 
+                        onTap: () => _setSubcategory(null),
                         child: Container(
                           padding: const EdgeInsets.all(8),
                           decoration: BoxDecoration(

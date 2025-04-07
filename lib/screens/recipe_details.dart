@@ -11,7 +11,6 @@ class RecipeDetailScreen extends StatelessWidget {
   final RecipeModel recipe;
   const RecipeDetailScreen({Key? key, required this.recipe}) : super(key: key);
 
-
   @override
   Widget build(BuildContext context) {
     final userProvider = Provider.of<UserProvider>(context);
@@ -130,7 +129,7 @@ class RecipeDetailScreen extends StatelessWidget {
                     ],
                   ),
                   const SizedBox(height: 20),
-Text(
+                  Text(
                     "Total Nutrients",
                     style: GoogleFonts.poppins(
                       fontSize: 16, // Heading size
@@ -268,49 +267,49 @@ Text(
                   }),
                   const SizedBox(height: 20),
                   // Instructions Section
-if (recipe.instructions != null && recipe.instructions!.isNotEmpty)
-  Column(
-    crossAxisAlignment: CrossAxisAlignment.start,
-    children: [
-      Text(
-        "Instructions",
-        style: GoogleFonts.poppins(
-          fontSize: 16,
-          fontWeight: FontWeight.bold,
-          color: Colors.black,
-        ),
-      ),
-      const SizedBox(height: 8),
-      Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: recipe.instructions!
-            .map((step) => Padding(
-                  padding: const EdgeInsets.only(bottom: 4),
-                  child: Text(
-                    "• $step",
-                    style: GoogleFonts.poppins(
-                      fontSize: 12,
-                      fontWeight: FontWeight.w300,
-                      color: Colors.black,
+                  if (recipe.instructions != null &&
+                      recipe.instructions!.isNotEmpty)
+                    Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          "Instructions",
+                          style: GoogleFonts.poppins(
+                            fontSize: 16,
+                            fontWeight: FontWeight.bold,
+                            color: Colors.black,
+                          ),
+                        ),
+                        const SizedBox(height: 8),
+                        Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: recipe.instructions!
+                              .map((step) => Padding(
+                                    padding: const EdgeInsets.only(bottom: 4),
+                                    child: Text(
+                                      "• $step",
+                                      style: GoogleFonts.poppins(
+                                        fontSize: 12,
+                                        fontWeight: FontWeight.w300,
+                                        color: Colors.black,
+                                      ),
+                                    ),
+                                  ))
+                              .toList(),
+                        ),
+                      ],
+                    )
+                  else
+                    Text(
+                      "Instructions not available",
+                      style: GoogleFonts.poppins(
+                        fontSize: 14,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.red,
+                      ),
                     ),
-                  ),
-                ))
-            .toList(),
-      ),
-    ],
-  )
-else
-  Text(
-    "Instructions not available",
-    style: GoogleFonts.poppins(
-      fontSize: 14,
-      fontWeight: FontWeight.bold,
-      color: Colors.red,
-    ),
-  ),
 
-const SizedBox(height: 20),
-                  
+                  const SizedBox(height: 20),
 
                   // Shopping Cart Button
                   Center(

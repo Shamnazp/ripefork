@@ -118,7 +118,6 @@ class PrivacyPolicyScreen extends StatelessWidget {
               ),
               SizedBox(height: 16),
               Text(
-                
                 'Contact Us',
                 style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
               ),
@@ -127,20 +126,17 @@ class PrivacyPolicyScreen extends StatelessWidget {
                 'If you need further assistance, please contact us through the following methods:',
                 style: TextStyle(fontSize: 16),
               ),
-              
               SizedBox(height: 8),
               ListTile(
-              leading: const Icon(Icons.email),
-              title: const Text('Email'),
-              subtitle: const Text('shamnaz@gmail.com'),
-              
-            ),
-            ListTile(
-              leading: const Icon(Icons.place),
-              title: const Text('Address'),
-              subtitle: const Text('Hustle Hub Tech Park, Bangalore'),
-              
-            ),
+                leading: const Icon(Icons.email),
+                title: const Text('Email'),
+                subtitle: const Text('shamnaz@gmail.com'),
+              ),
+              ListTile(
+                leading: const Icon(Icons.place),
+                title: const Text('Address'),
+                subtitle: const Text('Hustle Hub Tech Park, Bangalore'),
+              ),
             ],
           ),
         ),
