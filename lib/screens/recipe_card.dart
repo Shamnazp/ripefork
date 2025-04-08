@@ -4,12 +4,19 @@ import 'package:ripefo/screens/recipe_details.dart';
 import 'package:ripefo/services/hive_service.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 
-//home page recipe card
 class RecipeCard extends StatelessWidget {
   final RecipeModel recipe;
   final VoidCallback? onAdd;
 
   const RecipeCard({super.key, required this.recipe, this.onAdd});
+
+  // Force image to use https
+  String secureImageUrl(String url) {
+    if (url.startsWith('http://')) {
+      return url.replaceFirst('http://', 'https://');
+    }
+    return url;
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -17,7 +24,6 @@ class RecipeCard extends StatelessWidget {
       onTap: () async {
         final dbService = DatabaseService();
         await dbService.saveRecentRecipe(recipe);
-
         Navigator.push(
           context,
           MaterialPageRoute(
@@ -32,14 +38,23 @@ class RecipeCard extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             CachedNetworkImage(
-              imageUrl: recipe.image,
-              height: 140,
+              imageUrl: secureImageUrl(recipe.image),
+              height: 120,
               width: double.infinity,
               fit: BoxFit.cover,
               placeholder: (context, url) => Container(
-                height: 140,
+                height: 120,
                 color: Colors.grey[200],
-                child: const Center(child: CircularProgressIndicator()),
+                child: const Center(
+                  child: CircularProgressIndicator(strokeWidth: 2),
+                ),
+              ),
+              errorWidget: (context, url, error) => Container(
+                height: 120,
+                color: Colors.grey[200],
+                child: const Center(
+                  child: Icon(Icons.broken_image),
+                ),
               ),
             ),
             Padding(
@@ -50,12 +65,15 @@ class RecipeCard extends StatelessWidget {
                   Text(
                     recipe.label,
                     maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
                     style: const TextStyle(
                         fontSize: 16, fontWeight: FontWeight.bold),
                   ),
                   const SizedBox(height: 4),
-                  Text("calories: ${recipe.calories?.toStringAsFixed(1)} ",
-                      style: const TextStyle(fontSize: 12)),
+                  Text(
+                    "calories: ${recipe.calories?.toStringAsFixed(1)}",
+                    style: const TextStyle(fontSize: 12),
+                  ),
                 ],
               ),
             ),

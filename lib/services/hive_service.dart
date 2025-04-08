@@ -47,7 +47,7 @@ class DatabaseService {
 
     _recentRecipesBox = await Hive.openBox<RecipeModel>('recentRecipes');
   }
-                //save
+              
 //save recipe
   Future<void> saveRecipe(RecipeModel recipe) async {
     await _recipeBox.put(recipe.label, recipe);
@@ -123,8 +123,8 @@ class DatabaseService {
   // Save a recently viewed recipe
 Future<void> saveRecentRecipe(RecipeModel recipe) async {
   final existingIndex =
-      _recentRecipesBox.values.toList().indexWhere((r) => r.uri == recipe.uri);
-  
+    _recentRecipesBox.values.toList().indexWhere((r) => r.uri == recipe.uri);
+
   if (existingIndex != -1) {
     await _recentRecipesBox.deleteAt(existingIndex);
   }
@@ -132,14 +132,28 @@ Future<void> saveRecentRecipe(RecipeModel recipe) async {
   recipe.visitedDate = DateTime.now();
   await _recentRecipesBox.add(recipe);
 
-  // Keep only the last 3 recipes
-  if (_recentRecipesBox.length > 3) {
-    await _recentRecipesBox.deleteAt(0);
+  // ✅ Sort by visitedDate and keep only last 3
+  final recipes = _recentRecipesBox.values.toList()
+    ..sort((a, b) => b.visitedDate!.compareTo(a.visitedDate!));
+
+  if (recipes.length > 3) {
+    final extra = recipes.sublist(3); // Keep top 3, remove the rest
+    for (var recipe in extra) {
+      final index = _recentRecipesBox.values.toList().indexWhere((r) => r.uri == recipe.uri);
+      if (index != -1) {
+        await _recentRecipesBox.deleteAt(index);
+      }
+    }
   }
 }
 
+
 // Get last 3 viewed recipes
 List<RecipeModel> getRecentRecipes() {
-  return _recentRecipesBox.values.toList().reversed.toList();
+  return _recentRecipesBox.values
+      .toList()
+      ..sort((a, b) => b.visitedDate!.compareTo(a.visitedDate!));
 }
+
+
 }

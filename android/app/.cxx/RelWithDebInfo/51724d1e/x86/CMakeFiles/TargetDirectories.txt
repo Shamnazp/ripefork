@@ -1,0 +1,2 @@
+D:/projects/ripefo/android/app/.cxx/RelWithDebInfo/51724d1e/x86/CMakeFiles/edit_cache.dir
+D:/projects/ripefo/android/app/.cxx/RelWithDebInfo/51724d1e/x86/CMakeFiles/rebuild_cache.dir

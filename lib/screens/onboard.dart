@@ -1,10 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:ripefo/screens/add_recipe.dart';
-import 'package:ripefo/screens/home.dart';
-import 'package:ripefo/screens/login.dart';
-import 'package:ripefo/screens/profile.dart';
-import 'package:ripefo/screens/saved_recipe.dart';
-import 'package:ripefo/screens/search_recipe.dart';
+import 'package:ripefo/screens/home/home_screen.dart';
+import 'package:ripefo/screens/main_screen.dart';
 
 
 class OnBoard extends StatelessWidget {
@@ -118,14 +114,15 @@ class OnBoard extends StatelessWidget {
             child: Center(
               child: ElevatedButton(
                 onPressed: () {
-                  Navigator.pushReplacement(
-                    context,
-                    MaterialPageRoute(
-                      builder: (context) => HomeScreen(email: '',),
-                    ),
-                  );
-                  print("start cooking...");
-                },
+  Navigator.pushReplacement(
+    context,
+    MaterialPageRoute(
+      builder: (context) => const MainScreen(), // <- Navigate here
+    ),
+  );
+  print("start cooking...");
+},
+
                 style: ElevatedButton.styleFrom(
                   backgroundColor: Colors.red,
                   padding:

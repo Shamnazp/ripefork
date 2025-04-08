@@ -4,8 +4,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
 import 'package:ripefo/providers/user_provider.dart';
 import 'package:ripefo/screens/manage_profile.dart';
-import 'package:ripefo/screens/saved_recipe.dart';
-import 'package:ripefo/screens/settings.dart';
+import 'package:ripefo/screens/settings/settings_screen.dart';
 
 class ProfileScreen extends StatelessWidget {
   final String email;

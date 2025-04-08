@@ -1,3 +1,4 @@
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -25,9 +26,26 @@ class RecipeDetailScreen extends StatelessWidget {
             Stack(
               children: [
                 // Recipe Image
-                Image.network(recipe.image,
-                    width: double.infinity, height: 400, fit: BoxFit.cover),
-                // Back Button
+                CachedNetworkImage(
+  imageUrl: recipe.image,
+  width: double.infinity,
+  height: 400,
+  fit: BoxFit.cover,
+  placeholder: (context, url) => Container(
+    height: 400,
+    color: Colors.grey[200],
+    child: const Center(
+      child: CircularProgressIndicator(),
+    ),
+  ),
+  errorWidget: (context, url, error) => Container(
+    height: 400,
+    color: Colors.grey[200],
+    child: const Center(
+      child: Icon(Icons.broken_image, color: Colors.grey),
+    ),
+  ),
+),// Back Button
                 Positioned(
                   top: 40,
                   left: 15,
